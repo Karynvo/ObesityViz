@@ -1,4 +1,5 @@
 var debug = 1;
+var selectedCountry = "AFG";
 
 /* create svg */
 var margin = { top: 50, right: 50, bottom: 50, left: 50 },
@@ -25,10 +26,6 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 	var entries = d3.nest()
 		.key(function(d) { return d.location_name; })
 		.key(function(d) { return d.year; })
-		.rollup(function(leaves){
-			var result = d3.mean(leaves, function(d){ return d.mean; })
-			return result;
-		})
 		.entries(csvData);
 
 	if(debug) console.log(entries);
@@ -38,7 +35,7 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 		.range([0, width]);
 		
 	var y = d3.scaleLinear()
-		.domain([0, 100])
+		.domain([0, 1])
 		.range([height, 0]);
 
 	var xAxis = d3.axisBottom(x)
@@ -46,6 +43,7 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 
 	var yAxis = d3.axisLeft(y);
 
+	/* create axes */
 	g.append("g")
 		.attr("class", "x_axis")
 		.attr("transform", "translate(0," + height + ")")
@@ -60,4 +58,50 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 		.attr("class", "y_axis")
 		.call(yAxis);
 
+	/* create lines */
+	var line = d3.line()
+				.x(function(d){ return x(new Date(d.key, 0, 1, 0)); })
+				.y(function(d){ 
+					var mean = d3.mean(d.values, function(d){ return d.mean; });
+					return y(mean); 
+				});
+
+	g.selectAll(".country")
+		.data(entries, function(d){ return d.key; })
+		.enter().append("g")
+		.attr("class", "country")
+		.append("path")
+		.attr("class", "line")
+		.attr("id", function(d){ return d.values[0].values[0].location; })
+		.attr("d", function(d){ return line(d.values); });
+
+	/* dropdown */
+	var dropdownMenu = d3.select("body")
+						.append("div")
+						.attr("class", "country-select");
+
+	dropdownMenu.append("label")
+				.html("Select a location: ")
+				.append("select")
+				.attr("onchange", "selectCountry(this.value)");
+
+
+	dropdownMenu.select("select")
+				.selectAll("option")
+				.data(entries)
+				.enter()
+				.append("option")
+				.html(function(d){ return d.key; })
+				.attr("value", function(d){ 
+					// if(debug) console.log(d.values[0].values[0].location);
+					return d.values[0].values[0].location; 
+				});
+
 });
+
+var selectCountry = function(countryCode){
+	console.log(countryCode);
+	d3.select("#" + countryCode)
+		.classed("line", false)
+		.classed("turnRed", true);
+}
