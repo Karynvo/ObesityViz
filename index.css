@@ -17,8 +17,22 @@ body {
 	text-align:center;
 }
 
-.country {
+.meanColor {
   stroke: red;
+  fill: none;
+  stroke-opacity: 0.4;
+  stroke-width: 3px;
+}
+
+.minColor {
+  stroke: blue;
+  fill: none;
+  stroke-opacity: 0.4;
+  stroke-width: 3px;
+}
+
+.maxColor {
+  stroke: green;
   fill: none;
   stroke-opacity: 0.4;
   stroke-width: 3px;
@@ -26,6 +40,4 @@ body {
 
 .point {
 	fill: white;
-	stroke: red;
-	stroke-width: 3;
 }

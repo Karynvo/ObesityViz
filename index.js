@@ -116,7 +116,7 @@ var selectCountry = function(countryCode){
 	// console.log(selectedCountry.values);
 
 	/* adjust y-axis */
-	y.domain([findMinDomain(), findMaxDomain()]);
+	y.domain([findMinOrMaxMean(true), findMinOrMaxMean(false)]);
 
 	g.select(".y_axis").remove();
 
@@ -130,75 +130,28 @@ var selectCountry = function(countryCode){
 	g.append("g")
 		.attr("class", "country");
 
-	g.selectAll(".country")
-		.append("path")
-		.attr("id", selectedCountryId)
-		.attr("d", line(selectedCountry.values));
+	drawLines();
 
-	g.selectAll(".country")
-		.append("path")
-		.attr("id", selectedCountryId)
-		.attr("d", lineMin(selectedCountry.values));
-
-	g.selectAll(".country")
-		.append("path")
-		.attr("id", selectedCountryId)
-		.attr("d", lineMax(selectedCountry.values));
-
-	g.selectAll(".country")
-		.append("g")
-		.selectAll("circle")
-		.data(selectedCountry.values)
-		.enter().append("circle")
-		.attr("class", "point")
-		.attr("cx", function(d){ return x(new Date(d.key, 0, 1, 0)); })
-		.attr("cy", function(d){ return getYValue(d.values); })
-		.attr("r", 7);
-
-	// g.selectAll(".country")
-	// 	.append("g")
-	// 	.selectAll("circle")
-	// 	.data(selectedCountry.values)
-	// 	.enter().append("circle")
-	// 	.attr("class", "point")
-	// 	.attr("cx", function(d){ return x(new Date(d.key, 0, 1, 0)); })
-	// 	.attr("cy", function(d){ return getYValue(d.values); })
-	// 	.attr("r", 7);
-
-	// g.selectAll(".country")
-	// 	.append("g")
-	// 	.selectAll("circle")
-	// 	.data(selectedCountry.values)
-	// 	.enter().append("circle")
-	// 	.attr("class", "point")
-	// 	.attr("cx", function(d){ return x(new Date(d.key, 0, 1, 0)); })
-	// 	.attr("cy", function(d){ return getYValue(d.values); })
-	// 	.attr("r", 7);
+	drawPoints();
 }
 
 /* create lines */
 var line = d3.line()
 		.x(function(d){ return x(new Date(d.key, 0, 1, 0)); })
-		.y(function(d){ 
-			// var mean = d3.mean(d.values, function(d){ return d.mean; });
-			// return y(mean); 
-			return getYValue(d.values);
+		.y(function(d){
+			return getYValue(d.values, "mean");
 		});
 
 var lineMin = d3.line()
 		.x(function(d){ return x(new Date(d.key, 0, 1, 0)); })
 		.y(function(d){ 
-			var min = d3.mean(d.values, function(d){ return d.lower; });
-			return y(min); 
-			// return y(getLineValues(d.values)); 
+			return getYValue(d.values, "min");
 		});
 
 var lineMax = d3.line()
 		.x(function(d){ return x(new Date(d.key, 0, 1, 0)); })
 		.y(function(d){ 
-			var max = d3.mean(d.values, function(d){ return d.upper; });
-			return y(max); 
-			// return y(getLineValues(d.values)); 
+			return getYValue(d.values, "max");
 		});
 
 var findCountry = function(){
@@ -210,63 +163,72 @@ var findCountry = function(){
 	};
 }
 
-// var findMinOrMaxMean = function(getMin){
-// 	var a = [];
-
-// 	selectedCountry.values.forEach(function(d){
-// 		var potentialMinOrMaxMeans = [];
-// 		d.values.forEach(function(item){
-// 			potentialMinOrMaxMeans.push(item["mean"]);
-// 		});
-
-// 		a.push(d3.mean(potentialMinOrMaxMeans));
-// 	});
-
-// 	return getMin ? d3.min(a) : d3.max(a);
-// }
-
-var findMinDomain = function(){
+var findMinOrMaxMean = function(getMin){
 	var a = [];
+	var selectString = getMin ? "lower" : "upper";
 
 	selectedCountry.values.forEach(function(d){
 		var potentialMinOrMaxMeans = [];
 		d.values.forEach(function(item){
-			potentialMinOrMaxMeans.push(item["lower"]);
+			potentialMinOrMaxMeans.push(item[selectString]);
 		});
 
 		a.push(d3.mean(potentialMinOrMaxMeans));
 	});
 
-	return d3.min(a);
+	return getMin ? d3.min(a) : d3.max(a);
 }
 
-var findMaxDomain = function(){
-	var a = [];
-
-	selectedCountry.values.forEach(function(d){
-		var potentialMinOrMaxMeans = [];
-		d.values.forEach(function(item){
-			potentialMinOrMaxMeans.push(item["upper"]);
-		});
-
-		a.push(d3.mean(potentialMinOrMaxMeans));
-	});
-
-	return d3.max(a);
-}
-
-var getYValue = function(dataForAYear){
+var getYValue = function(dataForAYear, type){
 	return y(d3.mean(dataForAYear, function(element){
-		return element["mean"];
+		if(type == "mean")
+			return element["mean"];
+		if(type == "min")
+			return element["lower"];
+		if(type == "max")
+			return element["upper"];
 	}));
 }
 
-var getLineValues = function(values, typeOfDist){
-	if(typeOfDist == "mean")
-		return d3.mean(d.values, function(d){ return d.mean; });
-	if(typeOfDist == "min")
-		return d3.mean(d.values, function(d){ return d.min; });
-	if(typeOfDist == "max")
-		return d3.mean(d.values, function(d){ return d.max; });
+var createNewPath = function(){
+	return g.selectAll(".country")
+		.append("path")
+		.attr("id", selectedCountryId);
+}
+
+var drawLines = function(){
+	createNewPath()
+		.attr("d", line(selectedCountry.values))
+		.attr("class", "meanColor");
+
+	createNewPath()
+		.attr("d", lineMin(selectedCountry.values))
+		.attr("class", "minColor");
+
+	createNewPath()
+		.attr("d", lineMax(selectedCountry.values))
+		.attr("class", "maxColor");
+}
+
+var createNewPoints = function(){
+	return g.selectAll(".country")
+		.append("g")
+		.selectAll("circle")
+		.data(selectedCountry.values)
+		.enter().append("circle")
+		.attr("class", "point")
+		.attr("cx", function(d){ return x(new Date(d.key, 0, 1, 0)); })
+		.attr("r", 7);
+}
+
+var drawPoints = function(){
+	createNewPoints()
+		.attr("cy", function(d){ return getYValue(d.values, "mean"); });
+
+	createNewPoints()
+		.attr("cy", function(d){ return getYValue(d.values, "min"); });
+
+	createNewPoints()
+		.attr("cy", function(d){ return getYValue(d.values, "max"); });
 }
 
