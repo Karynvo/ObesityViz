@@ -3,14 +3,14 @@ var selectedCountryId = "AFG";
 var countryIdMapping = d3.map();
 var idCountryMapping = d3.map();
 var selectCountry;
-var entries;
+var nestByCountryAndYear;
 
 /* create svg */
-var margin = { top: 50, right: 50, bottom: 50, left: 50 },
+var margin = { top: 50, right: 50, bottom: 100, left: 100 },
 	width = 960 - margin.left - margin.right,
 	height = 640 - margin.top - margin.bottom;
 
-var svg = d3.select('body').append('svg')
+var svg = d3.select('#viz').append('svg')
 		.attr('width', width + margin.left + margin.right)
 		.attr('height', height + margin.top + margin.bottom);
 	g = svg.append('g')
@@ -22,13 +22,13 @@ var x = d3.scaleTime()
 	.range([0, width]);
 	
 var y = d3.scaleLinear()
-	.domain([0, 1])
 	.range([height, 0]);
 
 var xAxis = d3.axisBottom(x)
 			.ticks(d3.timeYear);
 
-var yAxis = d3.axisLeft(y);
+var yAxis = d3.axisLeft(y)
+			.tickFormat(d3.format(".3p"));
 
 /* parse file */
 d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (error, data) {
@@ -40,7 +40,7 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 	/* process data */
 	var csvData = d3.csvParse(data);
 
-	entries = d3.nest()
+	nestByCountryAndYear = d3.nest()
 		.key(function(d) { 
 			countryIdMapping.set(d.location_name, d.location);
 			idCountryMapping.set(d.location, d.location_name);
@@ -50,7 +50,7 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 		.entries(csvData);
 
 	if(debug){
-		console.log(entries);
+		console.log(nestByCountryAndYear);
 		console.log(idCountryMapping);
 	}
 
@@ -65,12 +65,25 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 		.attr("transform", "rotate(-65)")
 		.style("text-anchor", "end");
 
+	g.append("text")
+		.attr("y", height + margin.top)
+		.attr("x", width/2)
+		.style("text-anchor", "middle")
+		.text("Year");
+
 	g.append("g")
 		.attr("class", "y_axis")
 		.call(yAxis);
 
+	g.append("text")
+		.attr("transform", "rotate(-90)")
+		.attr("y", 0 - (margin.left / 2))
+		.attr("x", 0 - (height / 2))
+		.style("text-anchor", "middle")
+		.text("Average Percentage");
+
 	/* dropdown */
-	var dropdownMenu = d3.select("body")
+	var dropdownMenu = d3.select("#dropdown")
 						.append("div")
 						.attr("class", "country-select");
 
@@ -82,7 +95,7 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 
 	dropdownMenu.select("select")
 				.selectAll("option")
-				.data(entries)
+				.data(nestByCountryAndYear)
 				.enter()
 				.append("option")
 				.html(function(d){ return d.key; })
@@ -97,45 +110,163 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 });
 
 var selectCountry = function(countryCode){
-	console.log(countryCode);
-
 	selectedCountryId = countryCode;
 	selectedCountry = findCountry(selectedCountryId);
 
-	/* change color */
-	d3.selectAll(".turnRed")
-		.classed("turnRed", false)
-		.classed("line", true);
+	// console.log(selectedCountry.values);
 
-	g.select(".country").remove();
+	/* adjust y-axis */
+	y.domain([findMinDomain(), findMaxDomain()]);
 
-	d3.select("#" + countryCode)
-		.classed("line", false)
-		.classed("turnRed", true);
+	g.select(".y_axis").remove();
 
 	g.append("g")
-		.attr("class", "country")
+		.attr("class", "y_axis")
+		.call(yAxis);
+
+	/* redraw line and points */
+	g.select(".country").remove();
+
+	g.append("g")
+		.attr("class", "country");
+
+	g.selectAll(".country")
 		.append("path")
-		.attr("class", "turnRed")
 		.attr("id", selectedCountryId)
 		.attr("d", line(selectedCountry.values));
+
+	g.selectAll(".country")
+		.append("path")
+		.attr("id", selectedCountryId)
+		.attr("d", lineMin(selectedCountry.values));
+
+	g.selectAll(".country")
+		.append("path")
+		.attr("id", selectedCountryId)
+		.attr("d", lineMax(selectedCountry.values));
+
+	g.selectAll(".country")
+		.append("g")
+		.selectAll("circle")
+		.data(selectedCountry.values)
+		.enter().append("circle")
+		.attr("class", "point")
+		.attr("cx", function(d){ return x(new Date(d.key, 0, 1, 0)); })
+		.attr("cy", function(d){ return getYValue(d.values); })
+		.attr("r", 7);
+
+	// g.selectAll(".country")
+	// 	.append("g")
+	// 	.selectAll("circle")
+	// 	.data(selectedCountry.values)
+	// 	.enter().append("circle")
+	// 	.attr("class", "point")
+	// 	.attr("cx", function(d){ return x(new Date(d.key, 0, 1, 0)); })
+	// 	.attr("cy", function(d){ return getYValue(d.values); })
+	// 	.attr("r", 7);
+
+	// g.selectAll(".country")
+	// 	.append("g")
+	// 	.selectAll("circle")
+	// 	.data(selectedCountry.values)
+	// 	.enter().append("circle")
+	// 	.attr("class", "point")
+	// 	.attr("cx", function(d){ return x(new Date(d.key, 0, 1, 0)); })
+	// 	.attr("cy", function(d){ return getYValue(d.values); })
+	// 	.attr("r", 7);
 }
 
 /* create lines */
 var line = d3.line()
-			.x(function(d){ return x(new Date(d.key, 0, 1, 0)); })
-			.y(function(d){ 
-				var mean = d3.mean(d.values, function(d){ return d.mean; });
-				return y(mean); 
-			});
+		.x(function(d){ return x(new Date(d.key, 0, 1, 0)); })
+		.y(function(d){ 
+			// var mean = d3.mean(d.values, function(d){ return d.mean; });
+			// return y(mean); 
+			return getYValue(d.values);
+		});
+
+var lineMin = d3.line()
+		.x(function(d){ return x(new Date(d.key, 0, 1, 0)); })
+		.y(function(d){ 
+			var min = d3.mean(d.values, function(d){ return d.lower; });
+			return y(min); 
+			// return y(getLineValues(d.values)); 
+		});
+
+var lineMax = d3.line()
+		.x(function(d){ return x(new Date(d.key, 0, 1, 0)); })
+		.y(function(d){ 
+			var max = d3.mean(d.values, function(d){ return d.upper; });
+			return y(max); 
+			// return y(getLineValues(d.values)); 
+		});
 
 var findCountry = function(){
-	for (var i = 0; i < entries.length; i++) {
-		if(entries[i].key === idCountryMapping.get(selectedCountryId)){
-			console.log("Found");
-			console.log(entries[i]);
-			return entries[i];
+	for (var i = 0; i < nestByCountryAndYear.length; i++) {
+		if(nestByCountryAndYear[i].key === idCountryMapping.get(selectedCountryId)){
+			console.log(nestByCountryAndYear[i]);
+			return nestByCountryAndYear[i];
 		}
 	};
+}
+
+// var findMinOrMaxMean = function(getMin){
+// 	var a = [];
+
+// 	selectedCountry.values.forEach(function(d){
+// 		var potentialMinOrMaxMeans = [];
+// 		d.values.forEach(function(item){
+// 			potentialMinOrMaxMeans.push(item["mean"]);
+// 		});
+
+// 		a.push(d3.mean(potentialMinOrMaxMeans));
+// 	});
+
+// 	return getMin ? d3.min(a) : d3.max(a);
+// }
+
+var findMinDomain = function(){
+	var a = [];
+
+	selectedCountry.values.forEach(function(d){
+		var potentialMinOrMaxMeans = [];
+		d.values.forEach(function(item){
+			potentialMinOrMaxMeans.push(item["lower"]);
+		});
+
+		a.push(d3.mean(potentialMinOrMaxMeans));
+	});
+
+	return d3.min(a);
+}
+
+var findMaxDomain = function(){
+	var a = [];
+
+	selectedCountry.values.forEach(function(d){
+		var potentialMinOrMaxMeans = [];
+		d.values.forEach(function(item){
+			potentialMinOrMaxMeans.push(item["upper"]);
+		});
+
+		a.push(d3.mean(potentialMinOrMaxMeans));
+	});
+
+	return d3.max(a);
+}
+
+var getYValue = function(dataForAYear){
+	return y(d3.mean(dataForAYear, function(element){
+		return element["mean"];
+	}));
+}
+
+var getLineValues = function(values, typeOfDist){
+	if(typeOfDist == "mean")
+		return d3.mean(d.values, function(d){ return d.mean; });
+	if(typeOfDist == "min")
+		return d3.mean(d.values, function(d){ return d.min; });
+	if(typeOfDist == "max")
+		return d3.mean(d.values, function(d){ return d.max; });
 }
 

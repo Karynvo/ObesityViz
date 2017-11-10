@@ -17,9 +17,15 @@ body {
 	text-align:center;
 }
 
-.turnRed {
+.country {
   stroke: red;
   fill: none;
   stroke-opacity: 0.4;
   stroke-width: 3px;
+}
+
+.point {
+	fill: white;
+	stroke: red;
+	stroke-width: 3;
 }
