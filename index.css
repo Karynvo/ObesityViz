@@ -10,34 +10,84 @@
 .line {
 	fill: none;
 	stroke: white;
-  	stroke-opacity: 0;
+  stroke-opacity: 0;
 }
 
 body {
 	text-align:center;
 }
 
-.meanColor {
-  stroke: red;
+.line {
   fill: none;
   stroke-opacity: 0.4;
   stroke-width: 3px;
+}
+
+.meanColor {
+  stroke: red;
 }
 
 .minColor {
   stroke: blue;
-  fill: none;
-  stroke-opacity: 0.4;
-  stroke-width: 3px;
 }
 
 .maxColor {
   stroke: green;
-  fill: none;
-  stroke-opacity: 0.4;
-  stroke-width: 3px;
 }
 
 .point {
 	fill: white;
+  stroke-opacity: 0.4;
+  stroke-width: 3px;
+}
+
+.nonHoverPoint {
+  r: 7;
+}
+
+.hoverPoint {
+  r: 10;
+}
+
+#tooltip {
+  position: absolute;
+  height: 30px;
+  width: 80px;
+  text-align: center;
+  border: 1px solid black;
+  font: 12px sans-serif;
+  background: white;
+}
+
+p {
+  margin: 0;
+  padding: 0;
+}
+
+.visibleTooltip {
+  opacity: 0.9;
+}
+
+.invisibleTooltip {
+  opacity: 0;
+}
+
+.loaderPosition {
+  padding: 70px 0;
+}
+
+/* loader courtesy of w3 */
+.loader {
+  margin: auto;
+  border: 6px solid #f3f3f3; /* Light grey */
+  border-top: 6px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
