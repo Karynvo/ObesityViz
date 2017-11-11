@@ -64,14 +64,6 @@ p {
   padding: 0;
 }
 
-.visibleTooltip {
-  opacity: 0.9;
-}
-
-.invisibleTooltip {
-  opacity: 0;
-}
-
 .loaderPosition {
   padding: 70px 0;
 }

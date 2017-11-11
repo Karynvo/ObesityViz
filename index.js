@@ -2,8 +2,9 @@ var debug = 1;
 var selectedCountryId = "AFG";
 var countryIdMapping = d3.map();
 var idCountryMapping = d3.map();
-var selectCountry;
+var selectedCountry;
 var nestByCountryAndYear;
+var selectedYear;
 
 lineTypeEnum = {
     MIN : 0,
@@ -35,8 +36,6 @@ var xAxis = d3.axisBottom(x)
 
 var yAxis = d3.axisLeft(y)
 			.tickFormat(d3.format(".3p"));
-
-var textBox = d3.select("#tooltip");
 
 /* parse file */
 d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (error, data) {
@@ -232,30 +231,17 @@ var createNewPoints = function(){
 				.classed("nonHoverPoint", false)
 				.classed("hoverPoint", true);
 
-			textBox
-				.classed("invisibleTooltip", false)
-				.classed("visibleTooltip", true);
-
-			textBox
-				.style("left", (d3.event.pageX) - 35 + "px")		
-                .style("top", (d3.event.pageY) - 60 + "px");
-
-            textBox
-				.select("#percentage")
-				.text(d3.format(".3p")(getPercentText(this.className["baseVal"], d.values)));
-
-            textBox
-				.select("#header")
-				.text(getHeaderText(this.className["baseVal"]));
+			drawTooltip(this.className["baseVal"], d.values);
 		})
 		.on("mouseout", function(d){
 			d3.select(this)
 				.classed("hoverPoint", false)
 				.classed("nonHoverPoint", true);
 
-			textBox
-				.classed("visibleTooltip", false)
-				.classed("invisibleTooltip", true);
+			d3.select("#tooltip").remove();
+		})
+		.on("click", function(d){
+
 		});
 }
 
@@ -289,4 +275,26 @@ var getHeaderText = function(classes){
 		return "Average lower";
 	if(classes.includes("max"))
 		return "Average upper";
+}
+
+var drawTooltip = function(classes, dataForAYear){
+
+	var enterTextBox = d3.select("body")
+				.append("div")
+				.attr("id", "tooltip");
+
+	enterTextBox
+		.style("left", (d3.event.pageX) - 35 + "px")		
+        .style("top", (d3.event.pageY) - 60 + "px");
+
+	enterTextBox
+		.append("p")
+		.append("strong")
+		.attr("id", "header")
+		.text(getHeaderText(classes));
+
+	enterTextBox
+		.append("p")
+		.attr("id", "percentage")
+		.text(d3.format(".4p")(getPercentText(classes, dataForAYear)));
 }
