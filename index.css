@@ -49,6 +49,10 @@ body {
   r: 10;
 }
 
+.selectPoint {
+  stroke: black;
+}
+
 #tooltip {
   position: absolute;
   height: 30px;
@@ -59,7 +63,7 @@ body {
   background: white;
 }
 
-p {
+#tooltip p {
   margin: 0;
   padding: 0;
 }

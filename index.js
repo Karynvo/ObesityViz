@@ -1,5 +1,5 @@
 var debug = 1;
-var selectedCountryId = "AFG";
+var selectedCountryId = "Afghanistan";
 var countryIdMapping = d3.map();
 var idCountryMapping = d3.map();
 var selectedCountry;
@@ -17,7 +17,7 @@ var margin = { top: 50, right: 50, bottom: 100, left: 100 },
 	width = 960 - margin.left - margin.right,
 	height = 640 - margin.top - margin.bottom;
 
-var svg = d3.select('#viz').append('svg')
+var svg = d3.select('#viz')
 		.attr('width', width + margin.left + margin.right)
 		.attr('height', height + margin.top + margin.bottom);
 	g = svg.append('g')
@@ -54,7 +54,7 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 			return d.location_name; 
 		})
 		.key(function(d) { return d.year; })
-		.entries(csvData);
+		.map(csvData);
 
 	d3.select(".loaderPosition").remove();
 
@@ -101,16 +101,15 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 				.append("select")
 				.attr("onchange", "selectCountry(this.value)");
 
-
 	dropdownMenu.select("select")
 				.selectAll("option")
-				.data(nestByCountryAndYear)
+				.data(nestByCountryAndYear.keys())
 				.enter()
 				.append("option")
-				.html(function(d){ return d.key; })
+				.html(function(d){ return d; })
 				.attr("value", function(d){ 
 					// if(debug) console.log(d.values[0].values[0].location);
-					return countryIdMapping.get(d.key); 
+					return d; 
 				});
 
 	/* initial selected country */
@@ -120,9 +119,10 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 
 var selectCountry = function(countryCode){
 	selectedCountryId = countryCode;
-	selectedCountry = findCountry(selectedCountryId);
+	// selectedCountry = findCountry(selectedCountryId);
+	selectedCountry = nestByCountryAndYear.get(selectedCountryId);
 
-	// console.log(selectedCountry.values);
+	console.log(selectedCountry);
 
 	/* adjust y-axis */
 	y.domain([findMinOrMaxMean(true), findMinOrMaxMean(false)]);
@@ -146,46 +146,35 @@ var selectCountry = function(countryCode){
 
 /* create lines */
 var line = d3.line()
-		.x(function(d){ return x(new Date(d.key, 0, 1, 0)); })
+		.x(function(d){
+			return x(new Date(d[0].year, 0, 1, 0)); })
 		.y(function(d){
-			return y(getMean(d.values, lineTypeEnum.MEAN));
+			return y(getMean(d, lineTypeEnum.MEAN));
 		});
 
 var lineMin = d3.line()
-		.x(function(d){ return x(new Date(d.key, 0, 1, 0)); })
+		.x(function(d){ return x(new Date(d[0].year, 0, 1, 0)); })
 		.y(function(d){ 
-			return y(getMean(d.values, lineTypeEnum.MIN));
+			return y(getMean(d, lineTypeEnum.MIN));
 		});
 
 var lineMax = d3.line()
-		.x(function(d){ return x(new Date(d.key, 0, 1, 0)); })
-		.y(function(d){ 
-			return y(getMean(d.values, lineTypeEnum.MAX));
+		.x(function(d){ return x(new Date(d[0].year, 0, 1, 0)); })
+		.y(function(d){
+			return y(getMean(d, lineTypeEnum.MAX));
 		});
-
-var findCountry = function(){
-	for (var i = 0; i < nestByCountryAndYear.length; i++) {
-		if(nestByCountryAndYear[i].key === idCountryMapping.get(selectedCountryId)){
-			console.log(nestByCountryAndYear[i]);
-			return nestByCountryAndYear[i];
-		}
-	};
-}
 
 var findMinOrMaxMean = function(getMin){
-	var a = [];
+	var allYears = [];
 	var selectString = getMin ? "lower" : "upper";
 
-	selectedCountry.values.forEach(function(d){
-		var potentialMinOrMaxMeans = [];
-		d.values.forEach(function(item){
-			potentialMinOrMaxMeans.push(item[selectString]);
-		});
-
-		a.push(d3.mean(potentialMinOrMaxMeans));
+	selectedCountry.values().forEach(function(oneYear){
+		allYears.push(d3.mean(oneYear, function(elem){
+			return elem[selectString];
+		}));
 	});
 
-	return getMin ? d3.min(a) : d3.max(a);
+	return getMin ? d3.min(allYears) : d3.max(allYears);
 }
 
 var getMean = function(dataForAYear, type){
@@ -207,15 +196,15 @@ var createNewPath = function(){
 
 var drawLines = function(){
 	createNewPath()
-		.attr("d", line(selectedCountry.values))
+		.attr("d", line(selectedCountry.values()))
 		.attr("class", "line meanColor");
 
 	createNewPath()
-		.attr("d", lineMin(selectedCountry.values))
+		.attr("d", lineMin(selectedCountry.values()))
 		.attr("class", "line minColor");
 
 	createNewPath()
-		.attr("d", lineMax(selectedCountry.values))
+		.attr("d", lineMax(selectedCountry.values()))
 		.attr("class", "line maxColor");
 }
 
@@ -223,15 +212,15 @@ var createNewPoints = function(){
 	return g.selectAll(".country")
 		.append("g")
 		.selectAll("circle")
-		.data(selectedCountry.values)
+		.data(selectedCountry.values())
 		.enter().append("circle")
-		.attr("cx", function(d){ return x(new Date(d.key, 0, 1, 0)); })
+		.attr("cx", function(d){ return x(new Date(d[0].year, 0, 1, 0)); })
 		.on("mouseover", function(d){
 			d3.select(this)
 				.classed("nonHoverPoint", false)
 				.classed("hoverPoint", true);
 
-			drawTooltip(this.className["baseVal"], d.values);
+			drawTooltip(this.className["baseVal"], d);
 		})
 		.on("mouseout", function(d){
 			d3.select(this)
@@ -241,21 +230,29 @@ var createNewPoints = function(){
 			d3.select("#tooltip").remove();
 		})
 		.on("click", function(d){
+			selectedYear = d;
 
+			d3.select(".selectPoint")
+				.classed("selectPoint", false);
+
+			d3.select(this)
+				.classed("selectPoint", true);
+
+			// drawAges();
 		});
 }
 
 var drawPoints = function(){
 	createNewPoints()
-		.attr("cy", function(d){ return y(getMean(d.values, lineTypeEnum.MEAN)); })
+		.attr("cy", function(d){ return y(getMean(d, lineTypeEnum.MEAN)); })
 		.attr("class", "point nonHoverPoint meanColor");
 
 	createNewPoints()
-		.attr("cy", function(d){ return y(getMean(d.values, lineTypeEnum.MIN)); })
+		.attr("cy", function(d){ return y(getMean(d, lineTypeEnum.MIN)); })
 		.attr("class", "point nonHoverPoint minColor");
 
 	createNewPoints()
-		.attr("cy", function(d){ return y(getMean(d.values, lineTypeEnum.MAX)); })
+		.attr("cy", function(d){ return y(getMean(d, lineTypeEnum.MAX)); })
 		.attr("class", "point nonHoverPoint maxColor");
 }
 
@@ -278,7 +275,6 @@ var getHeaderText = function(classes){
 }
 
 var drawTooltip = function(classes, dataForAYear){
-
 	var enterTextBox = d3.select("body")
 				.append("div")
 				.attr("id", "tooltip");
