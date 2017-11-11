@@ -237,16 +237,16 @@ var createNewPoints = function(){
 				.classed("visibleTooltip", true);
 
 			textBox
-				.style("left", (d3.event.pageX) - 20 + "px")		
+				.style("left", (d3.event.pageX) - 35 + "px")		
                 .style("top", (d3.event.pageY) - 60 + "px");
 
             textBox
 				.select("#percentage")
-				.text(d3.format(".3p")(getText(this.className["baseVal"], d.values)));
+				.text(d3.format(".3p")(getPercentText(this.className["baseVal"], d.values)));
 
             textBox
 				.select("#header")
-				.text(selectedCountry.key);
+				.text(getHeaderText(this.className["baseVal"]));
 		})
 		.on("mouseout", function(d){
 			d3.select(this)
@@ -273,11 +273,20 @@ var drawPoints = function(){
 		.attr("class", "point nonHoverPoint maxColor");
 }
 
-var getText = function(classes, dataForAYear){
+var getPercentText = function(classes, dataForAYear){
 	if(classes.includes("mean"))
 		return getMean(dataForAYear, lineTypeEnum.MEAN);
 	if(classes.includes("min"))
 		return getMean(dataForAYear, lineTypeEnum.MIN);
 	if(classes.includes("max"))
 		return getMean(dataForAYear, lineTypeEnum.MAX);
+}
+
+var getHeaderText = function(classes){
+	if(classes.includes("mean"))
+		return "Average mean";
+	if(classes.includes("min"))
+		return "Average lower";
+	if(classes.includes("max"))
+		return "Average upper";
 }

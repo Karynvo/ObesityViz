@@ -52,7 +52,7 @@ body {
 #tooltip {
   position: absolute;
   height: 30px;
-  width: 80px;
+  width: 100px;
   text-align: center;
   border: 1px solid black;
   font: 12px sans-serif;
