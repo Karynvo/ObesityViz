@@ -4,7 +4,6 @@ var countryIdMapping = d3.map();
 var idCountryMapping = d3.map();
 var selectedCountry;
 var nestByCountryAndYear;
-var selectedYear;
 
 lineTypeEnum = {
     MIN : 0,
@@ -48,6 +47,7 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 	var csvData = d3.csvParse(data);
 
 	nestByCountryAndYear = d3.nest()
+		.key(function(d){ return d.sex; })
 		.key(function(d) { 
 			countryIdMapping.set(d.location_name, d.location);
 			idCountryMapping.set(d.location, d.location_name);
@@ -60,7 +60,6 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 
 	if(debug){
 		console.log(nestByCountryAndYear);
-		console.log(idCountryMapping);
 	}
 
 	/* create axes */
@@ -103,7 +102,7 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 
 	dropdownMenu.select("select")
 				.selectAll("option")
-				.data(nestByCountryAndYear.keys())
+				.data(countryIdMapping.keys())
 				.enter()
 				.append("option")
 				.html(function(d){ return d; })
@@ -120,12 +119,11 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 var selectCountry = function(countryCode){
 	selectedCountryId = countryCode;
 	// selectedCountry = findCountry(selectedCountryId);
-	selectedCountry = nestByCountryAndYear.get(selectedCountryId);
-
-	console.log(selectedCountry);
+	// selectedCountry = nestByCountryAndYear.get(selectedCountryId);
 
 	/* adjust y-axis */
-	y.domain([findMinOrMaxMean(true), findMinOrMaxMean(false)]);
+	y.domain(getDomain());
+	// y.domain([0, 1]);
 
 	g.select(".y_axis").remove();
 
@@ -149,70 +147,49 @@ var line = d3.line()
 		.x(function(d){
 			return x(new Date(d[0].year, 0, 1, 0)); })
 		.y(function(d){
-			return y(getMean(d, lineTypeEnum.MEAN));
+			return y(getMean(d));
 		});
 
-var lineMin = d3.line()
-		.x(function(d){ return x(new Date(d[0].year, 0, 1, 0)); })
-		.y(function(d){ 
-			return y(getMean(d, lineTypeEnum.MIN));
-		});
-
-var lineMax = d3.line()
-		.x(function(d){ return x(new Date(d[0].year, 0, 1, 0)); })
-		.y(function(d){
-			return y(getMean(d, lineTypeEnum.MAX));
-		});
-
-var findMinOrMaxMean = function(getMin){
+var getDomain = function(){
 	var allYears = [];
-	var selectString = getMin ? "lower" : "upper";
 
-	selectedCountry.values().forEach(function(oneYear){
-		allYears.push(d3.mean(oneYear, function(elem){
-			return elem[selectString];
-		}));
+	nestByCountryAndYear.each(function(oneGender){
+		var currCountry = oneGender.get(selectedCountryId);
+		currCountry.values().forEach(function(oneYear){
+			allYears.push(d3.mean(oneYear, function(elem){
+				return elem["mean"];
+			}));
+		});
 	});
 
-	return getMin ? d3.min(allYears) : d3.max(allYears);
+	return [d3.min(allYears), d3.max(allYears)];
 }
 
-var getMean = function(dataForAYear, type){
+var getMean = function(dataForAYear){
 	return d3.mean(dataForAYear, function(element){
-		if(type == lineTypeEnum.MEAN)
-			return element["mean"];
-		if(type == lineTypeEnum.MIN)
-			return element["lower"];
-		if(type == lineTypeEnum.MAX)
-			return element["upper"];
+		return element["mean"];
 	});
 }
 
 var createNewPath = function(){
 	return g.selectAll(".country")
-		.append("path")
-		.attr("id", selectedCountryId);
+		.append("path");
 }
 
 var drawLines = function(){
-	createNewPath()
-		.attr("d", line(selectedCountry.values()))
+	nestByCountryAndYear.entries().forEach(function(oneGender){
+		createNewPath()
+		.attr("d", line(oneGender.value.get(selectedCountryId).values()))
+		.attr("id", oneGender.key)
 		.attr("class", "line meanColor");
-
-	createNewPath()
-		.attr("d", lineMin(selectedCountry.values()))
-		.attr("class", "line minColor");
-
-	createNewPath()
-		.attr("d", lineMax(selectedCountry.values()))
-		.attr("class", "line maxColor");
+	});
 }
 
-var createNewPoints = function(){
+var createNewPoints = function(data){
 	return g.selectAll(".country")
 		.append("g")
 		.selectAll("circle")
-		.data(selectedCountry.values())
+		.data(data)
 		.enter().append("circle")
 		.attr("cx", function(d){ return x(new Date(d[0].year, 0, 1, 0)); })
 		.on("mouseover", function(d){
@@ -220,7 +197,7 @@ var createNewPoints = function(){
 				.classed("nonHoverPoint", false)
 				.classed("hoverPoint", true);
 
-			drawTooltip(this.className["baseVal"], d);
+			// drawTooltip(this.className["baseVal"], d);
 		})
 		.on("mouseout", function(d){
 			d3.select(this)
@@ -230,30 +207,22 @@ var createNewPoints = function(){
 			d3.select("#tooltip").remove();
 		})
 		.on("click", function(d){
-			selectedYear = d;
 
 			d3.select(".selectPoint")
 				.classed("selectPoint", false);
 
 			d3.select(this)
 				.classed("selectPoint", true);
-
-			// drawAges();
 		});
 }
 
 var drawPoints = function(){
-	createNewPoints()
-		.attr("cy", function(d){ return y(getMean(d, lineTypeEnum.MEAN)); })
-		.attr("class", "point nonHoverPoint meanColor");
-
-	createNewPoints()
-		.attr("cy", function(d){ return y(getMean(d, lineTypeEnum.MIN)); })
-		.attr("class", "point nonHoverPoint minColor");
-
-	createNewPoints()
-		.attr("cy", function(d){ return y(getMean(d, lineTypeEnum.MAX)); })
-		.attr("class", "point nonHoverPoint maxColor");
+	nestByCountryAndYear.entries().forEach(function(oneGender){
+		createNewPoints(oneGender.value.get(selectedCountryId).values())
+		.attr("cy", function(d){ return y(getMean(d)); })
+		.attr("class", "point nonHoverPoint")
+		.attr("id", oneGender.key);
+	});
 }
 
 var getPercentText = function(classes, dataForAYear){

@@ -23,15 +23,15 @@ body {
   stroke-width: 3px;
 }
 
-.meanColor {
+#female {
   stroke: red;
 }
 
-.minColor {
+#male {
   stroke: blue;
 }
 
-.maxColor {
+#both {
   stroke: green;
 }
 
