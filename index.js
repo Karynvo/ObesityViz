@@ -50,6 +50,11 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 		.map(csvData);
 
 	d3.select(".loaderPosition").remove();
+	d3.select("#vizTitle")
+		.text("Prevalence of Being Overweight/Obesity Split By Sex");
+
+	d3.select("#viz2Title")
+		.text("Log Ratio of Overweight/Obese Individuals from Males to Females");
 
 	/* create axes */
 	g.append("g")
@@ -62,22 +67,9 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 		.attr("transform", "rotate(-65)")
 		.style("text-anchor", "end");
 
-	// g.append("text")
-	// 	.attr("y", height + margin.top)
-	// 	.attr("x", width/2)
-	// 	.style("text-anchor", "middle")
-	// 	.text("Year");
-
 	g.append("g")
 		.attr("class", "y_axis")
 		.call(yAxis);
-
-	// g.append("text")
-	// 	.attr("transform", "rotate(-90)")
-	// 	.attr("y", 0 - (margin.left / 2))
-	// 	.attr("x", 0 - (height / 2))
-	// 	.style("text-anchor", "middle")
-	// 	.text("Average Percentage");
 
 	/* dropdown */
 	var dropdownMenu = d3.select("#dropdown")
@@ -128,13 +120,6 @@ var selectCountry = function(countryCode){
 	processRatioData();
 	drawSecondGraph();
 }
-
-var verticalLine = d3.line()
-	.x(function(d){
-		return x(new Date("2010", 0, 1, 0)); })
-	.y(function(d){
-		return y(d.yVal);
-	});
 
 /* create lines */
 var line = d3.line()
@@ -214,6 +199,7 @@ var createNewPoints = function(data){
 		.data(data.value.get(selectedCountryId).values())
 		.enter().append("circle")
 		.attr("cx", function(d){ return x(new Date(d[0].year, 0, 1, 0)); })
+		.attr("class", function(d){ return "point nonHoverPoint y" + d[0].year; })
 		.on("mouseover", function(d){
 			elementsInCurrYear = d3.selectAll(".y" + d[0].year);
 			
@@ -225,8 +211,7 @@ var createNewPoints = function(data){
 			addMouseout();
 
 			d3.select("#tooltip").remove();
-		})
-		.attr("class", function(d){ return "point nonHoverPoint y" + d[0].year; });
+		});
 }
 
 var drawPoints = function(){
