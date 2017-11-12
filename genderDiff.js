@@ -26,23 +26,10 @@ var xAxis2 = d3.axisBottom(x2)
 var yAxis2 = d3.axisLeft(y2);
 
 var createSecondSvg = function(){
-	/* create axes */
-	g2.append("g")
-		.attr("class", "x_axis2")
-		.attr("transform", "translate(0," + oneSideHeight+ ")")
-		.call(xAxis2)
-    .selectAll("text")
-		.attr("x", -10)
-		.attr("y", 0)
-		.attr("transform", "rotate(-65)")
-		.style("text-anchor", "end");
-
-	g2.append("g")
-		.attr("class", "y_axis2")
-		.call(yAxis2);
+	createAxes(g2, oneSideHeight, xAxis2, yAxis2, "x_axis2", "y_axis2");
 }
 
-var drawSecondGraph = function(){
+var drawBars = function(){
 	g2.selectAll(".bar").remove();
 
 	g2.selectAll(".bar")
@@ -77,11 +64,16 @@ var drawSecondGraph = function(){
 }
 
 var drawBarTooltip = function(ratio){
-	createToolTip()
+	createToolTip();
 
 	d3.select("#header")
 		.text("Log ratio males to females");
 
 	d3.select("#percentage")
 		.text(d3.format(".4")(ratio));
+}
+
+var drawBarGraph = function(){
+	processRatioData();
+	drawBars();
 }

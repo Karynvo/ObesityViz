@@ -50,78 +50,25 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 		.map(csvData);
 
 	d3.select(".loaderPosition").remove();
-	d3.select("#vizTitle")
-		.text("Prevalence of Being Overweight/Obesity Split By Sex");
 
-	d3.select("#viz2Title")
-		.text("Log Ratio of Overweight/Obese Individuals from Males to Females");
+	intializeTitles();
 
-	/* create axes */
-	g.append("g")
-		.attr("class", "x_axis")
-		.attr("transform", "translate(0," + height + ")")
-		.call(xAxis)
-    .selectAll("text")
-		.attr("x", -10)
-		.attr("y", 0)
-		.attr("transform", "rotate(-65)")
-		.style("text-anchor", "end");
+	drawAxes();
 
-	g.append("g")
-		.attr("class", "y_axis")
-		.call(yAxis);
-
-	/* dropdown */
-	var dropdownMenu = d3.select("#dropdown")
-						.append("div")
-						.attr("class", "country-select");
-
-	dropdownMenu.append("label")
-				.html("Select a location: ")
-				.append("select")
-				.attr("onchange", "selectCountry(this.value)");
-
-	dropdownMenu.select("select")
-				.selectAll("option")
-				.data(nestByCountryAndYear.get(nestByCountryAndYear.keys()[0]).keys().sort())
-				.enter()
-				.append("option")
-				.html(function(d){ return d; })
-				.attr("value", function(d){ 
-					return d; 
-				});
+	createDropdown();
 
 	/* initial selected country */
 	selectCountry(selectedCountryId);
-	createSecondSvg();
 });
 
 var selectCountry = function(countryCode){
 	selectedCountryId = countryCode;
 
-	/* adjust y-axis */
-	y.domain(getDomain());
+	drawLineGraph();
 
-	d3.select(".y_axis")
-		.transition()
-    	.duration(1000)
-		.call(yAxis);
-
-	/* redraw line and points */
-	g.select(".country").remove();
-
-	g.append("g")
-		.attr("class", "country");
-
-	drawLines();
-
-	drawPoints();
-
-	processRatioData();
-	drawSecondGraph();
+	drawBarGraph();
 }
 
-/* create lines */
 var line = d3.line()
 		.x(function(d){
 			return x(new Date(d[0].year, 0, 1, 0)); })
@@ -189,7 +136,7 @@ var processRatioData = function(){
 			}
 		);
 	});
-	console.log(ratioFinal);
+	// console.log(ratioFinal);
 }
 
 var createNewPoints = function(data){
@@ -245,7 +192,7 @@ var drawPointTooltip = function(currId, dataForAYear){
 	createToolTip()
 
 	d3.select("#header")
-		.text("Average % " + currId);
+		.text("Mean % " + currId);
 
 	d3.select("#percentage")
 		.text(d3.format(".4p")(getMean(dataForAYear)));
@@ -273,4 +220,78 @@ var addMouseout = function(){
 			.filter("rect")
 			.classed("hoverBar", false)
 			.classed("nonHoverBar", true);
+}
+
+var createAxes = function(refG, currHeight, currXAxis, currYAxis, xAxisClass, yAxisClass){
+	refG.append("g")
+		.attr("class", xAxisClass)
+		.attr("transform", "translate(0," + currHeight + ")")
+		.call(currXAxis)
+    .selectAll("text")
+		.attr("x", -10)
+		.attr("y", 0)
+		.attr("transform", "rotate(-90)")
+		.style("text-anchor", "end");
+
+	refG.append("g")
+		.attr("class", yAxisClass)
+		.call(currYAxis);
+}
+
+var drawAxes = function(){
+	createAxes(g, height, xAxis, yAxis, "x_axis", "y_axis");
+	createAxes(g2, oneSideHeight, xAxis2, yAxis2, "x_axis2", "y_axis2");
+}
+
+var intializeTitles = function(){
+	d3.select("#vizTitle")
+		.text("Prevalence Split By Sex");
+
+	d3.select("#viz2Title")
+		.text("Log Ratio of Males to Females");
+}
+
+var createDropdown = function(){
+	var dropdownMenu = d3.select("#dropdown")
+						.append("div")
+						.attr("class", "country-select");
+
+	dropdownMenu.append("label")
+				.html("Select a location: ")
+				.append("select")
+				.attr("onchange", "selectCountry(this.value)");
+
+	dropdownMenu.select("select")
+				.selectAll("option")
+				.data(nestByCountryAndYear.get(nestByCountryAndYear.keys()[0]).keys().sort())
+				.enter()
+				.append("option")
+				.html(function(d){ return d; })
+				.attr("value", function(d){ 
+					return d; 
+				});
+}
+
+var resetCanvas = function(){
+	g.select(".country").remove();
+
+	g.append("g")
+		.attr("class", "country");
+}
+
+var adjustYAxis = function(){
+	y.domain(getDomain());
+
+	d3.select(".y_axis")
+		.transition()
+    	.duration(1000)
+		.call(yAxis);
+}
+
+var drawLineGraph = function(){
+	adjustYAxis();
+	resetCanvas();
+
+	drawLines();
+	drawPoints();
 }

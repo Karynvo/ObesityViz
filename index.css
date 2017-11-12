@@ -74,6 +74,7 @@ body {
   border: 1px solid black;
   font: 12px sans-serif;
   background: white;
+  opacity: 0.9;
 }
 
 #tooltip p {
