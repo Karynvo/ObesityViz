@@ -1,6 +1,7 @@
 var margin2 = { top: 50, right: 50, bottom: 100, left: 50 },
 	width2 = 500 - margin2.left - margin2.right,
-	height2 = 640 - margin2.top - margin2.bottom;
+	height2 = 640 - margin2.top - margin2.bottom,
+	oneSideHeight = height2/2;
 
 var svg2 = d3.select('#viz2')
 		.attr('width', width2 + margin2.left + margin2.right)
@@ -28,7 +29,7 @@ var createSecondSvg = function(){
 	/* create axes */
 	g2.append("g")
 		.attr("class", "x_axis2")
-		.attr("transform", "translate(0," + height2/2 + ")")
+		.attr("transform", "translate(0," + oneSideHeight+ ")")
 		.call(xAxis2)
     .selectAll("text")
 		.attr("x", -10)
@@ -50,11 +51,11 @@ var drawSecondGraph = function(){
 		.attr("class", function(d){ return "bar nonHoverBar y" + d.year})
 		.attr("x", function(d) { return x2(new Date(d.year, 0, 1, 0)); })
 		.attr("y", function(d) {
-			return Math.min(height2/2, y2(d.value)); 
+			return Math.min(oneSideHeight, y2(d.value)); 
 		})
 		.attr("width", x2.bandwidth())
 		.attr("height", function(d) { 
-			return Math.abs(y2(d.value) - height2/2);
+			return Math.abs(y2(d.value) - oneSideHeight);
 		})
 		.attr("id", function(d) { 
 			if(d.value < 0)
@@ -65,8 +66,22 @@ var drawSecondGraph = function(){
 			elementsInCurrYear = d3.selectAll(".y" + d.year);
 			
 			addMouseover();
+
+			drawBarTooltip(d.value);
 		})
 		.on("mouseout", function(d){
 			addMouseout();
+
+			d3.select("#tooltip").remove();
 		});
+}
+
+var drawBarTooltip = function(ratio){
+	createToolTip()
+
+	d3.select("#header")
+		.text("Log ratio males to females");
+
+	d3.select("#percentage")
+		.text(d3.format(".4")(ratio));
 }

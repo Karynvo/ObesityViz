@@ -219,7 +219,7 @@ var createNewPoints = function(data){
 			
 			addMouseover();
 
-			drawTooltip(this.id, d);
+			drawPointTooltip(this.id, d);
 		})
 		.on("mouseout", function(d){
 			addMouseout();
@@ -237,7 +237,7 @@ var drawPoints = function(){
 	});
 }
 
-var drawTooltip = function(currId, dataForAYear){
+var createToolTip = function(){
 	var enterTextBox = d3.select("body")
 				.append("div")
 				.attr("id", "tooltip");
@@ -246,15 +246,23 @@ var drawTooltip = function(currId, dataForAYear){
 		.style("left", (d3.event.pageX) - 35 + "px")		
         .style("top", (d3.event.pageY) - 60 + "px");
 
-	enterTextBox
-		.append("p")
+    enterTextBox
+    	.append("p")
 		.append("strong")
-		.attr("id", "header")
-		.text("Average " + currId);
+		.attr("id", "header");
 
 	enterTextBox
 		.append("p")
 		.attr("id", "percentage")
+}
+
+var drawPointTooltip = function(currId, dataForAYear){
+	createToolTip()
+
+	d3.select("#header")
+		.text("Average % " + currId);
+
+	d3.select("#percentage")
 		.text(d3.format(".4p")(getMean(dataForAYear)));
 }
 
@@ -275,7 +283,7 @@ var addMouseout = function(){
 			.filter("circle")
 			.classed("hoverPoint", false)
 			.classed("nonHoverPoint", true);
-			
+
 	elementsInCurrYear
 			.filter("rect")
 			.classed("hoverBar", false)
