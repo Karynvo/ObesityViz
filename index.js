@@ -1,15 +1,7 @@
 var debug = 1;
 var selectedCountryId = "Afghanistan";
 var countryIdMapping = d3.map();
-var idCountryMapping = d3.map();
-var selectedCountry;
 var nestByCountryAndYear;
-
-lineTypeEnum = {
-    MIN : 0,
-    MEAN : 1,
-    MAX : 2
-}
 
 /* create svg */
 var margin = { top: 50, right: 50, bottom: 100, left: 100 },
@@ -49,11 +41,9 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 	nestByCountryAndYear = d3.nest()
 		.key(function(d){ return d.sex; })
 		.key(function(d) { 
-			countryIdMapping.set(d.location_name, d.location);
-			idCountryMapping.set(d.location, d.location_name);
 			return d.location_name; 
-		})
-		.key(function(d) { return d.year; })
+		}).sortKeys(d3.ascending)
+		.key(function(d) { return d.year; }).sortKeys(d3.ascending)
 		.map(csvData);
 
 	d3.select(".loaderPosition").remove();
@@ -102,12 +92,11 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 
 	dropdownMenu.select("select")
 				.selectAll("option")
-				.data(countryIdMapping.keys())
+				.data(nestByCountryAndYear.get(nestByCountryAndYear.keys()[0]).keys().sort())
 				.enter()
 				.append("option")
 				.html(function(d){ return d; })
 				.attr("value", function(d){ 
-					// if(debug) console.log(d.values[0].values[0].location);
 					return d; 
 				});
 
@@ -118,12 +107,9 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 
 var selectCountry = function(countryCode){
 	selectedCountryId = countryCode;
-	// selectedCountry = findCountry(selectedCountryId);
-	// selectedCountry = nestByCountryAndYear.get(selectedCountryId);
 
 	/* adjust y-axis */
 	y.domain(getDomain());
-	// y.domain([0, 1]);
 
 	g.select(".y_axis").remove();
 
