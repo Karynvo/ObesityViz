@@ -197,7 +197,7 @@ var createNewPoints = function(data){
 				.classed("nonHoverPoint", false)
 				.classed("hoverPoint", true);
 
-			// drawTooltip(this.className["baseVal"], d);
+			drawTooltip(this.id, d);
 		})
 		.on("mouseout", function(d){
 			d3.select(this)
@@ -205,14 +205,6 @@ var createNewPoints = function(data){
 				.classed("nonHoverPoint", true);
 
 			d3.select("#tooltip").remove();
-		})
-		.on("click", function(d){
-
-			d3.select(".selectPoint")
-				.classed("selectPoint", false);
-
-			d3.select(this)
-				.classed("selectPoint", true);
 		});
 }
 
@@ -225,25 +217,7 @@ var drawPoints = function(){
 	});
 }
 
-var getPercentText = function(classes, dataForAYear){
-	if(classes.includes("mean"))
-		return getMean(dataForAYear, lineTypeEnum.MEAN);
-	if(classes.includes("min"))
-		return getMean(dataForAYear, lineTypeEnum.MIN);
-	if(classes.includes("max"))
-		return getMean(dataForAYear, lineTypeEnum.MAX);
-}
-
-var getHeaderText = function(classes){
-	if(classes.includes("mean"))
-		return "Average mean";
-	if(classes.includes("min"))
-		return "Average lower";
-	if(classes.includes("max"))
-		return "Average upper";
-}
-
-var drawTooltip = function(classes, dataForAYear){
+var drawTooltip = function(currId, dataForAYear){
 	var enterTextBox = d3.select("body")
 				.append("div")
 				.attr("id", "tooltip");
@@ -256,10 +230,10 @@ var drawTooltip = function(classes, dataForAYear){
 		.append("p")
 		.append("strong")
 		.attr("id", "header")
-		.text(getHeaderText(classes));
+		.text("Average " + currId);
 
 	enterTextBox
 		.append("p")
 		.attr("id", "percentage")
-		.text(d3.format(".4p")(getPercentText(classes, dataForAYear)));
+		.text(d3.format(".4p")(getMean(dataForAYear)));
 }
