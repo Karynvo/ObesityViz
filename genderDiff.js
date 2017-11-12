@@ -9,16 +9,18 @@ var svg2 = d3.select('#viz2')
 		.attr('transform', 'translate(' + 
 		margin2.left + ',' + margin2.top + ')');
 
-var x2 = d3.scaleTime()
-	.domain([new Date(1990, 0, 1, 0), new Date(2013, 0, 1, 0)])
-	.range([0, width2]);
+var x2 = d3.scaleBand()
+	.domain(d3.timeYears(new Date(1990, 0, 1, 0), new Date(2014, 0, 1, 0)))
+	.rangeRound([0, width2])
+	.padding(0.1);
 
 var y2 = d3.scaleLinear()
 	.domain([-0.5, 0.5])
 	.range([height2, 0]);
 
 var xAxis2 = d3.axisBottom(x2)
-		.ticks(d3.timeYear);
+		.ticks(d3.timeYear)
+		.tickFormat(d3.timeFormat("%Y"));
 
 var yAxis2 = d3.axisLeft(y2);
 
@@ -52,20 +54,30 @@ var drawSecondGraph = function(){
 	g2.selectAll(".bar")
 		.data(ratioFinal)
 		.enter().append("rect")
-		.attr("class", "bar")
+		.attr("class", function(d){ return "bar nonHoverBar y" + d.year})
 		.attr("x", function(d) { return x2(new Date(d.year, 0, 1, 0)); })
 		.attr("y", function(d) {
 			if(d.value < 0) 
 				return height2/2;
 			return y2(d.value); 
 		})
-		.attr("width", width2/25)
+		.attr("width", x2.bandwidth())
 		.attr("height", function(d) { 
-			console.log(height2/2);
-			console.log(y2(d.value));
-			console.log(d.value);
 			if(d.value < 0)
 				return y2(d.value) - height2/2; 
 			return height2/2 - y2(d.value); 
+		})
+		.attr("id", function(d) { 
+			if(d.value < 0)
+				return "under"; 
+			return "over"; 
+		})
+		.on("mouseover", function(d){
+			elementsInCurrYear = d3.selectAll(".y" + d.year);
+			
+			addMouseover();
+		})
+		.on("mouseout", function(d){
+			addMouseout();
 		});
 }

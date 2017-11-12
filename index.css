@@ -49,8 +49,22 @@ body {
   r: 10;
 }
 
-.selectPoint {
+.bar {
+  fill-opacity: 0.4;
+}
+
+#under.nonHoverBar{
+  fill: red;
+}
+
+#over.nonHoverBar{
+  fill: blue;
+}
+
+.hoverBar {
+  stroke-width: 1px;
   stroke: black;
+  fill: yellow;
 }
 
 #tooltip {

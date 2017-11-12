@@ -2,6 +2,7 @@ var selectedCountryId = "Afghanistan";
 var countryIdMapping = d3.map();
 var nestByCountryAndYear;
 var ratioFinal;
+var elementsInCurrYear;
 
 /* create svg */
 var margin = { top: 50, right: 50, bottom: 100, left: 100 },
@@ -183,19 +184,16 @@ var processRatioData = function(){
 	nestByCountryAndYear.entries().forEach(function(oneGender){
 		ratioData[oneGender.key] = oneGender.value.get(selectedCountryId).values();
 	});
-	console.log(ratioData);
 
 	var ratioYearsF = {};
 	var femaleYears = ratioData["female"].forEach(function(d){
 		ratioYearsF[d[0].year] = getMean(d);
 	});
-	console.log(ratioYearsF);
 
 	var ratioYearsM = {};
 	var maleYears = ratioData["male"].forEach(function(d){
 		ratioYearsM[d[0].year] = getMean(d);
 	});
-	console.log(ratioYearsM);
 
 	ratioFinal = [];
 	ratioData["female"].forEach(function(d){
@@ -217,16 +215,14 @@ var createNewPoints = function(data){
 		.enter().append("circle")
 		.attr("cx", function(d){ return x(new Date(d[0].year, 0, 1, 0)); })
 		.on("mouseover", function(d){
-			d3.selectAll(".y" + d[0].year)
-				.classed("nonHoverPoint", false)
-				.classed("hoverPoint", true);
+			elementsInCurrYear = d3.selectAll(".y" + d[0].year);
+			
+			addMouseover();
 
 			drawTooltip(this.id, d);
 		})
 		.on("mouseout", function(d){
-			d3.selectAll(".y" + d[0].year)
-				.classed("hoverPoint", false)
-				.classed("nonHoverPoint", true);
+			addMouseout();
 
 			d3.select("#tooltip").remove();
 		})
@@ -260,4 +256,28 @@ var drawTooltip = function(currId, dataForAYear){
 		.append("p")
 		.attr("id", "percentage")
 		.text(d3.format(".4p")(getMean(dataForAYear)));
+}
+
+var addMouseover = function(){
+	elementsInCurrYear
+			.filter("circle")
+			.classed("nonHoverPoint", false)
+			.classed("hoverPoint", true);
+
+	elementsInCurrYear
+			.filter("rect")
+			.classed("nonHoverBar", false)
+			.classed("hoverBar", true);	
+}
+
+var addMouseout = function(){
+	elementsInCurrYear
+			.filter("circle")
+			.classed("hoverPoint", false)
+			.classed("nonHoverPoint", true);
+			
+	elementsInCurrYear
+			.filter("rect")
+			.classed("hoverBar", false)
+			.classed("nonHoverBar", true);
 }
