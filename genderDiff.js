@@ -15,7 +15,7 @@ var x2 = d3.scaleBand()
 	.padding(0.1);
 
 var y2 = d3.scaleLinear()
-	.domain([-0.5, 0.5])
+	.domain([-0.55, 0.55])
 	.range([height2, 0]);
 
 var xAxis2 = d3.axisBottom(x2)
@@ -39,13 +39,6 @@ var createSecondSvg = function(){
 	g2.append("g")
 		.attr("class", "y_axis2")
 		.call(yAxis2);
-
-	g2.append("text")
-		.attr("transform", "rotate(-90)")
-		.attr("y", 0 - (margin2.left / 2))
-		.attr("x", 0 - (height2 / 2))
-		.style("text-anchor", "middle")
-		.text("Average Percentage");
 }
 
 var drawSecondGraph = function(){
@@ -57,15 +50,11 @@ var drawSecondGraph = function(){
 		.attr("class", function(d){ return "bar nonHoverBar y" + d.year})
 		.attr("x", function(d) { return x2(new Date(d.year, 0, 1, 0)); })
 		.attr("y", function(d) {
-			if(d.value < 0) 
-				return height2/2;
-			return y2(d.value); 
+			return Math.min(height2/2, y2(d.value)); 
 		})
 		.attr("width", x2.bandwidth())
 		.attr("height", function(d) { 
-			if(d.value < 0)
-				return y2(d.value) - height2/2; 
-			return height2/2 - y2(d.value); 
+			return Math.abs(y2(d.value) - height2/2);
 		})
 		.attr("id", function(d) { 
 			if(d.value < 0)

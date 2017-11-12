@@ -62,22 +62,22 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 		.attr("transform", "rotate(-65)")
 		.style("text-anchor", "end");
 
-	g.append("text")
-		.attr("y", height + margin.top)
-		.attr("x", width/2)
-		.style("text-anchor", "middle")
-		.text("Year");
+	// g.append("text")
+	// 	.attr("y", height + margin.top)
+	// 	.attr("x", width/2)
+	// 	.style("text-anchor", "middle")
+	// 	.text("Year");
 
 	g.append("g")
 		.attr("class", "y_axis")
 		.call(yAxis);
 
-	g.append("text")
-		.attr("transform", "rotate(-90)")
-		.attr("y", 0 - (margin.left / 2))
-		.attr("x", 0 - (height / 2))
-		.style("text-anchor", "middle")
-		.text("Average Percentage");
+	// g.append("text")
+	// 	.attr("transform", "rotate(-90)")
+	// 	.attr("y", 0 - (margin.left / 2))
+	// 	.attr("x", 0 - (height / 2))
+	// 	.style("text-anchor", "middle")
+	// 	.text("Average Percentage");
 
 	/* dropdown */
 	var dropdownMenu = d3.select("#dropdown")
