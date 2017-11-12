@@ -1,11 +1,11 @@
-var debug = 1;
 var selectedCountryId = "Afghanistan";
 var countryIdMapping = d3.map();
 var nestByCountryAndYear;
+var ratioFinal;
 
 /* create svg */
 var margin = { top: 50, right: 50, bottom: 100, left: 100 },
-	width = 960 - margin.left - margin.right,
+	width = 700 - margin.left - margin.right,
 	height = 640 - margin.top - margin.bottom;
 
 var svg = d3.select('#viz')
@@ -28,6 +28,8 @@ var xAxis = d3.axisBottom(x)
 var yAxis = d3.axisLeft(y)
 			.tickFormat(d3.format(".3p"));
 
+var logScale = d3.scaleLog();
+
 /* parse file */
 d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (error, data) {
 	if(error){
@@ -47,10 +49,6 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 		.map(csvData);
 
 	d3.select(".loaderPosition").remove();
-
-	if(debug){
-		console.log(nestByCountryAndYear);
-	}
 
 	/* create axes */
 	g.append("g")
@@ -102,7 +100,7 @@ d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (
 
 	/* initial selected country */
 	selectCountry(selectedCountryId);
-
+	createSecondSvg();
 });
 
 var selectCountry = function(countryCode){
@@ -111,10 +109,9 @@ var selectCountry = function(countryCode){
 	/* adjust y-axis */
 	y.domain(getDomain());
 
-	g.select(".y_axis").remove();
-
-	g.append("g")
-		.attr("class", "y_axis")
+	d3.select(".y_axis")
+		.transition()
+    	.duration(1000)
 		.call(yAxis);
 
 	/* redraw line and points */
@@ -126,7 +123,17 @@ var selectCountry = function(countryCode){
 	drawLines();
 
 	drawPoints();
+
+	processRatioData();
+	drawSecondGraph();
 }
+
+var verticalLine = d3.line()
+	.x(function(d){
+		return x(new Date("2010", 0, 1, 0)); })
+	.y(function(d){
+		return y(d.yVal);
+	});
 
 /* create lines */
 var line = d3.line()
@@ -166,39 +173,70 @@ var drawLines = function(){
 	nestByCountryAndYear.entries().forEach(function(oneGender){
 		createNewPath()
 		.attr("d", line(oneGender.value.get(selectedCountryId).values()))
-		.attr("id", oneGender.key)
-		.attr("class", "line meanColor");
+		.attr("class", "line")
+		.attr("id", oneGender.key);
 	});
+}
+
+var processRatioData = function(){
+	var ratioData = {};
+	nestByCountryAndYear.entries().forEach(function(oneGender){
+		ratioData[oneGender.key] = oneGender.value.get(selectedCountryId).values();
+	});
+	console.log(ratioData);
+
+	var ratioYearsF = {};
+	var femaleYears = ratioData["female"].forEach(function(d){
+		ratioYearsF[d[0].year] = getMean(d);
+	});
+	console.log(ratioYearsF);
+
+	var ratioYearsM = {};
+	var maleYears = ratioData["male"].forEach(function(d){
+		ratioYearsM[d[0].year] = getMean(d);
+	});
+	console.log(ratioYearsM);
+
+	ratioFinal = [];
+	ratioData["female"].forEach(function(d){
+		ratioFinal.push(
+			{ 
+				year: d[0].year,
+				value: logScale(ratioYearsM[d[0].year]) - logScale(ratioYearsF[d[0].year])
+			}
+		);
+	});
+	console.log(ratioFinal);
 }
 
 var createNewPoints = function(data){
 	return g.selectAll(".country")
 		.append("g")
 		.selectAll("circle")
-		.data(data)
+		.data(data.value.get(selectedCountryId).values())
 		.enter().append("circle")
 		.attr("cx", function(d){ return x(new Date(d[0].year, 0, 1, 0)); })
 		.on("mouseover", function(d){
-			d3.select(this)
+			d3.selectAll(".y" + d[0].year)
 				.classed("nonHoverPoint", false)
 				.classed("hoverPoint", true);
 
 			drawTooltip(this.id, d);
 		})
 		.on("mouseout", function(d){
-			d3.select(this)
+			d3.selectAll(".y" + d[0].year)
 				.classed("hoverPoint", false)
 				.classed("nonHoverPoint", true);
 
 			d3.select("#tooltip").remove();
-		});
+		})
+		.attr("class", function(d){ return "point nonHoverPoint y" + d[0].year; });
 }
 
 var drawPoints = function(){
 	nestByCountryAndYear.entries().forEach(function(oneGender){
-		createNewPoints(oneGender.value.get(selectedCountryId).values())
+		createNewPoints(oneGender)
 		.attr("cy", function(d){ return y(getMean(d)); })
-		.attr("class", "point nonHoverPoint")
 		.attr("id", oneGender.key);
 	});
 }
