@@ -5,7 +5,7 @@ var ratioFinal;
 var elementsInCurrYear;
 
 /* parse file */
-d3.text("../data/IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (error, data) {
+d3.text("IHME_GBD_2013_OBESITY_PREVALENCE_1990_2013_Y2014M10D08.csv", function (error, data) {
 	if(error){
 		console.log(error);
 		return;
