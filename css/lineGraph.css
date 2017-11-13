@@ -1,0 +1,31 @@
+.line {
+  fill: none;
+  stroke-opacity: 0.4;
+  stroke-width: 3px;
+}
+
+#female {
+  stroke: red;
+}
+
+#male {
+  stroke: blue;
+}
+
+#both {
+  stroke: green;
+}
+
+.point {
+	fill: white;
+  stroke-opacity: 0.4;
+  stroke-width: 3px;
+}
+
+.nonHoverPoint {
+  r: 5;
+}
+
+.hoverPoint {
+  r: 10;
+}

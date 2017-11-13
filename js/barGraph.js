@@ -25,6 +25,8 @@ var xAxis2 = d3.axisBottom(x2)
 
 var yAxis2 = d3.axisLeft(y2);
 
+var logScale = d3.scaleLog();
+
 var createSecondSvg = function(){
 	createAxes(g2, oneSideHeight, xAxis2, yAxis2, "x_axis2", "y_axis2");
 }
@@ -71,6 +73,34 @@ var drawBarTooltip = function(ratio){
 
 	d3.select("#percentage")
 		.text(d3.format(".4")(ratio));
+}
+
+var processRatioData = function(){
+	var ratioData = {};
+	nestByCountryAndYear.entries().forEach(function(oneGender){
+		ratioData[oneGender.key] = oneGender.value.get(selectedCountryId).values();
+	});
+
+	var ratioYearsF = {};
+	var femaleYears = ratioData["female"].forEach(function(d){
+		ratioYearsF[d[0].year] = getMean(d);
+	});
+
+	var ratioYearsM = {};
+	var maleYears = ratioData["male"].forEach(function(d){
+		ratioYearsM[d[0].year] = getMean(d);
+	});
+
+	ratioFinal = [];
+	ratioData["female"].forEach(function(d){
+		ratioFinal.push(
+			{ 
+				year: d[0].year,
+				value: logScale(ratioYearsM[d[0].year]) - logScale(ratioYearsF[d[0].year])
+			}
+		);
+	});
+	// console.log(ratioFinal);
 }
 
 var drawBarGraph = function(){
