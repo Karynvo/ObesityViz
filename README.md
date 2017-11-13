@@ -1,6 +1,6 @@
 # Overweight/Obese Populations By Location
 
-This visualization examines the prevalence of overweight and obese populations by location and by gender.
+This visualization examines the prevalence of overweight and obese populations by location and by sex.
 
 ## Prevalence Split By Sex
 This line graph displays the percentage of people who are overweight and obese for the selected location. The red line represents females, the blue line represents males, and the green line represents both sexes. All three lines are drawn at the same time in order for comparisons to be made between the three.
