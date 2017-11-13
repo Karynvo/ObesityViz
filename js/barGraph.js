@@ -16,7 +16,7 @@ var x2 = d3.scaleBand()
 	.padding(0.1);
 
 var y2 = d3.scaleLinear()
-	.domain([-0.55, 0.55])
+	.domain([-2, 2])
 	.range([height2, 0]);
 
 var xAxis2 = d3.axisBottom(x2)
@@ -25,7 +25,8 @@ var xAxis2 = d3.axisBottom(x2)
 
 var yAxis2 = d3.axisLeft(y2);
 
-var logScale = d3.scaleLog();
+var logScale = d3.scaleLog()
+				.domain([1,2]);
 
 var createSecondSvg = function(){
 	createAxes(g2, oneSideHeight, xAxis2, yAxis2, "x_axis2", "y_axis2");
@@ -69,7 +70,7 @@ var drawBarTooltip = function(ratio){
 	createToolTip();
 
 	d3.select("#header")
-		.text("Log ratio males to females");
+		.text("Log Base 2 ratio males to females");
 
 	d3.select("#percentage")
 		.text(d3.format(".4")(ratio));

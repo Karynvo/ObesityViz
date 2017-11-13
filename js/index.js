@@ -111,7 +111,7 @@ var intializeTitles = function(){
 		.text("Prevalence Split By Sex");
 
 	d3.select("#viz2Title")
-		.text("Log Ratio of Males to Females");
+		.text("Log Base 2 Ratio of Males to Females");
 }
 
 var createDropdown = function(){
